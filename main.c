@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "gbv.h"
+#include "util.h"
+
+
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
@@ -35,6 +38,56 @@ int main(int argc, char *argv[]) {
         printf("Opção inválida.\n");
     }
 
+    free(lib.docs);
     return 0;
 }
 
+
+
+
+/*
+int main() {
+    const char *biblioteca = "teste.gbv";
+    const char *docs[3] = {"doc1.txt", "doc2.txt", "doc3.txt"};
+
+    // Cria a biblioteca
+    if (!gbv_create(biblioteca)) {
+        printf("Erro ao criar biblioteca\n");
+        return 1;
+    }
+
+    // Abre a biblioteca
+    Library lib;
+    if (!gbv_open(&lib, biblioteca)) {
+        printf("Erro ao abrir biblioteca\n");
+        return 1;
+    }
+
+    // Adiciona os 3 documentos
+    for (int i = 0; i < 3; i++) {
+        if (!gbv_add(&lib, biblioteca, docs[i])) {
+            printf("Erro ao adicionar %s\n", docs[i]);
+            gbv_close(&lib);
+            return 1;
+        }
+    }
+
+    // Remove o segundo documento
+    if (!gbv_remove(&lib, docs[1])) {
+        printf("Erro ao remover %s\n", docs[1]);
+        gbv_close(&lib);
+        return 1;
+    }
+
+    // Atualiza o arquivo após remoção (se necessário)
+    // Exemplo: write_directory_and_superblock(&lib, biblioteca);
+
+    // Lista os documentos restantes
+    gbv_list(&lib);
+
+    // Fecha a biblioteca
+    gbv_close(&lib);
+
+    return 0;
+}
+*/
