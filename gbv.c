@@ -1,40 +1,43 @@
-#include "gbv.h"
-#include "util.h"
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include "gbv.h"
+#include "util.h"
 
 #define MAX_NAME 256
 // Variável estática para armazenar o nome do arquivo da biblioteca
 static char current_archive_name[MAX_NAME] = {0};
+
+
 
 typedef struct{
     long offset; // posição do começo da area de diretorio
     long n_docs; // número de documentos no arquivo
 } superblock;
 
+
+
 int gbv_create(const char *filename){
-    
     FILE *file = fopen(filename, "wb");
     if (!file) {
         perror("Erro ao criar o arquivo");
         return 0;
     }
 
-    // Inicializa o cabeçalho do arquivo (pode ser vazio ou conter metadados iniciais)
+    // Inicializa o cabeçalho do arquivo 
     superblock sb;
     sb.offset = sizeof(superblock);
     sb.n_docs = 0;
     
-    // Aqui, apenas escrevemos um cabeçalho simples com contagem zero
+    // Escreve o cabeçalho no arquivo
     if (fwrite(&sb, sizeof(superblock), 1, file) != 1) {
     perror("Erro ao escrever o cabeçalho do arquivo");
     fclose(file);
     return 0;
     }
     fclose(file);
-    return 1; // sucesso
+    return 1;
 }
 
 
@@ -48,71 +51,20 @@ void gbv_close(Library *lib) {
 }
 
 
-/*
-// Função auxiliar para reescrever o diretório e o superbloco
-static int write_directory_and_superblock(Library *lib, const char *archive) {
-    FILE *file = fopen(archive, "rb+");
-    if (!file) {
-        perror("Erro ao reescrever a biblioteca");
-        return 0;
-    }
-
-    // Pega o offset da área de dados, que é o tamanho do arquivo
-    long data_end_offset;
-    fseek(file, 0, SEEK_END);
-    data_end_offset = ftell(file);
-
-    // Escreve o diretório na nova posição
-    if (fseek(file, data_end_offset, SEEK_SET) != 0) {
-        perror("Erro ao posicionar para escrever o diretório");
-        fclose(file);
-        return 0;
-    }
-    if (fwrite(lib->docs, sizeof(Document), lib->count, file) != (size_t)lib->count) {
-        perror("Erro ao escrever o diretório");
-        fclose(file);
-        return 0;
-    }
-
-    // Atualiza o superbloco
-    superblock sb;
-    sb.offset = data_end_offset;
-    sb.n_docs = lib->count;
-    if (fseek(file, 0, SEEK_SET) != 0) {
-        perror("Erro ao posicionar para atualizar o superbloco");
-        fclose(file);
-        return 0;
-    }
-    if (fwrite(&sb, sizeof(superblock), 1, file) != 1) {
-        perror("Erro ao escrever o superbloco");
-        fclose(file);
-        return 0;
-    }
-
-    fclose(file);
-    return 1;
-}
-*/
 
 int gbv_open(Library *lib, const char *filename){
     FILE *file = fopen(filename, "rb");
-    printf("entrou gbv_open\n");
-    // Se o arquivo não puder ser aberto em 'rb' (não existe ou erro de permissão)
+    // Se o arquivo não puder ser aberto em 'rb'
     if (!file) {
-        printf("Arquivo não existe, tentando criar...\n");
-        // 1. Tenta criar a biblioteca usando a função dedicada
+        // Tenta criar a biblioteca
         if (!gbv_create(filename)) {
             printf("Falha ao criar a biblioteca.\n");
-            // Se gbv_create falhar (retorna 0), retorna erro
             return 1;
         }
         
-        printf("Biblioteca criada com sucesso.\n");
-        // 2. Se a criação foi bem-sucedida, reabre o arquivo em modo 'rb'
+        // Se a criação foi bem-sucedida, reabre o arquivo em modo 'rb'
         file = fopen(filename, "rb");
         if (!file) {
-            printf("Falha ao reabrir a biblioteca recém-criada.\n");
-            // Se falhar ao reabrir, é um erro fatal
             perror("Erro fatal ao reabrir a biblioteca recém-criada");
             return 1;
         }
@@ -122,15 +74,12 @@ int gbv_open(Library *lib, const char *filename){
     strncpy(current_archive_name, filename, MAX_NAME - 1);
     current_archive_name[MAX_NAME - 1] = '\0';
 
-    // A partir daqui, o arquivo 'file' está aberto e inicializado (se for novo).
-    printf("Arquivo aberto com sucesso.\n");
-    printf("Lendo superbloco...\n");
     // Lê o superbloco
     superblock sb;
     if (fread(&sb, sizeof(superblock), 1, file) != 1) {
         perror("Erro ao ler o superbloco");
         fclose(file);
-        return 1; // erro
+        return 1;
     }
 
     // Aloca memória para o diretório
@@ -142,7 +91,7 @@ int gbv_open(Library *lib, const char *filename){
         if (!lib->docs) {
             perror("Erro ao alocar memória para o diretório");
             fclose(file);
-            return 1; // erro
+            return 1;
         }
         
         // Posiciona para ler o diretório
@@ -150,7 +99,7 @@ int gbv_open(Library *lib, const char *filename){
             perror("Erro ao posicionar para ler o diretório");
             free(lib->docs);
             fclose(file);
-            return 1; // erro
+            return 1;
         }
         
         // Lê o diretório
@@ -158,12 +107,12 @@ int gbv_open(Library *lib, const char *filename){
             perror("Erro ao ler o diretório");
             free(lib->docs);
             fclose(file);
-            return 1; // erro
+            return 1; 
         }
     }
     
     fclose(file);
-    return 0; // sucesso
+    return 0; 
 }
 
 /*
@@ -307,7 +256,7 @@ int gbv_add(Library *lib, const char *archive, const char *docname) {
         }
     }
 
-    //Prepara a nova entrada (índice a ser usado)
+    //Prepara a nova entrada
     int target_index;
     int is_new = (found_index == -1);
 
@@ -320,7 +269,7 @@ int gbv_add(Library *lib, const char *archive, const char *docname) {
             return 0;
         }
         lib->docs = tmp;
-        target_index = lib->count; // O novo documento vai para o final
+        target_index = lib->count; 
         lib->count++; 
     } else {
         // Se for substituição, usa o índice encontrado
@@ -328,7 +277,7 @@ int gbv_add(Library *lib, const char *archive, const char *docname) {
         printf("Documento '%s' substituído.\n", docname); 
     }
     
-    // Abre o arquivo da biblioteca no modo de adição (append) para dados
+    // Abre o arquivo da biblioteca no modo de adição
     FILE *gbv_file = fopen(archive, "rb+");
     if (!gbv_file) {
         perror("Erro ao abrir a biblioteca para escrita de dados");
@@ -340,9 +289,9 @@ int gbv_add(Library *lib, const char *archive, const char *docname) {
 
     // Posiciona o ponteiro no FINAL DO ARQUIVO para adicionar o documento
     fseek(gbv_file, 0, SEEK_END);
-    long data_offset = ftell(gbv_file); // Este é o offset onde o dado será escrito
+    long data_offset = ftell(gbv_file);
 
-    // Copia os dados do documento para o final do arquivo container (em blocos de BUFFER_SIZE)
+    // Copia os dados do documento para o final do arquivo container 
     char buffer[BUFFER_SIZE];
     size_t bytes_read;
     while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, doc_file)) > 0) {
@@ -354,7 +303,7 @@ int gbv_add(Library *lib, const char *archive, const char *docname) {
         }
     }
     
-    // Atualiza os metadados do documento (tanto novo quanto substituído)
+    // Atualiza os metadados do documento 
     strncpy(lib->docs[target_index].name, docname, MAX_NAME - 1);
     lib->docs[target_index].name[MAX_NAME - 1] = '\0';
     lib->docs[target_index].size = st.st_size;
@@ -365,7 +314,7 @@ int gbv_add(Library *lib, const char *archive, const char *docname) {
     //Reescreve o superbloco
     superblock sb;
     sb.n_docs = lib->count;
-    sb.offset = sizeof(superblock); // O diretório é sempre após o superbloco
+    sb.offset = sizeof(superblock); 
 
     fseek(gbv_file, 0, SEEK_SET);
     fwrite(&sb, sizeof(superblock), 1, gbv_file);
@@ -396,12 +345,13 @@ int gbv_list(const Library *lib){
         format_date(lib->docs[i].date, date_buffer, sizeof(date_buffer));
         printf("%-30s %-10ld %-20s\n", lib->docs[i].name, lib->docs[i].size, date_buffer);
     }
+
     return 1;
 }
 
 
 int gbv_view(const Library *lib, const char *docname) {
-    // 1. Localiza o documento na biblioteca (em memória)
+    // Localiza o documento na biblioteca
     int found_index = -1;
     for (int i = 0; i < lib->count; i++) {
         if (strcmp(lib->docs[i].name, docname) == 0) {
@@ -417,14 +367,14 @@ int gbv_view(const Library *lib, const char *docname) {
 
     const Document *doc = &lib->docs[found_index];
 
-    // 2. Abre o arquivo container (usando a variável global)
+    // Abre o arquivo container
     FILE *archive_file = fopen(current_archive_name, "rb");
     if (!archive_file) {
         perror("Erro ao abrir a biblioteca para visualização");
         return 0;
     }
 
-    // 3. Configuração inicial para navegação
+    // Configuração inicial para navegação
     long current_offset = doc->offset;
     long doc_end_offset = doc->offset + doc->size;
     char buffer[BUFFER_SIZE];
@@ -433,24 +383,19 @@ int gbv_view(const Library *lib, const char *docname) {
     printf("\n--- Visualização do Documento '%s' ---\n", docname);
 
     do {
-        // A. Reposiciona o ponteiro para o início do bloco atual
         fseek(archive_file, current_offset, SEEK_SET);
 
-        // B. Calcula quantos bytes ler (para não ler além do final do documento)
+        // Calcula quantos bytes ler
         long bytes_remaining = doc_end_offset - current_offset;
         size_t bytes_to_read = (bytes_remaining > BUFFER_SIZE) ? BUFFER_SIZE : bytes_remaining;
-
         size_t bytes_read = fread(buffer, 1, bytes_to_read, archive_file);
 
         if (bytes_read > 0) {
-            // C. Imprime o bloco lido
             fwrite(buffer, 1, bytes_read, stdout);
         } else {
-            // Caso chegue ao fim do documento
-            current_offset = doc_end_offset; // Garante que o offset está no final
+            current_offset = doc_end_offset; 
         }
 
-        // D. Interface de usuário (LOOP)
         printf("\n\n-- Bloco de %ld a %ld -- [n] Próximo, [p] Anterior, [q] Sair: ", 
                current_offset - doc->offset, 
                (current_offset - doc->offset) + bytes_read);
@@ -458,10 +403,10 @@ int gbv_view(const Library *lib, const char *docname) {
         // Limpa o buffer de entrada e espera pelo comando
         fflush(stdout); 
         if (scanf(" %c", &command) != 1) { 
-            command = 'q'; // Sai em caso de erro de leitura
+            command = 'q'; 
         }
 
-        // E. Lógica de navegação
+        // Lógica de navegação
         if (command == 'n') {
             // Avança para o próximo bloco, se houver bytes restantes
             if (current_offset + bytes_read < doc_end_offset) {
@@ -478,7 +423,7 @@ int gbv_view(const Library *lib, const char *docname) {
                 if (prev_offset < doc->offset) {
                     current_offset = doc->offset; 
                 } else {
-                    current_offset = prev_offset; // Volta um bloco completo
+                    current_offset = prev_offset; 
                 }
             } else {
                 printf("\n(Já está no início do documento.)\n");
@@ -526,15 +471,13 @@ int gbv_remove(Library *lib, const char *docname) {
         lib->docs = NULL;
     }
 
-    printf("Documento '%s' removido da biblioteca.\n", docname);
-
     FILE *gbv_file = fopen(current_archive_name, "rb+"); 
     if (!gbv_file) {
         perror("Erro ao abrir a biblioteca para remoção (rb+)");
         return 0;
     }
 
-    // 2. Atualiza e reescreve o superbloco com a nova contagem (lib->count)
+    // Atualiza e reescreve o superbloco com a nova contagem (lib->count)
     superblock sb;
     sb.n_docs = lib->count;
     sb.offset = sizeof(superblock);
@@ -546,7 +489,7 @@ int gbv_remove(Library *lib, const char *docname) {
         return 0;
     }
 
-    // 3. Reescreve o diretório (apenas os documentos restantes)
+    // Reescreve o diretório
     fseek(gbv_file, sb.offset, SEEK_SET);
     if (fwrite(lib->docs, sizeof(Document), lib->count, gbv_file) != (size_t)lib->count) {
         perror("Erro ao escrever o diretório");
