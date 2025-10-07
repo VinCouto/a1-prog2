@@ -46,7 +46,7 @@ mencionada.
 
 ------------------------------BUGS CONHECIDOS-----------------------------
 
-Após meus testes o único bug conhecido é no gbv_view
+Após meus testes o único bug conhecido no gbv_view é
 
 Quando adicionado um documento ao diretorio na primeira interação com o
 gbv_view o mesmo não mostra nada escrito no documento, porém ao atualizar o
@@ -54,3 +54,18 @@ documento,adicionar um documento com o mesmo nome, e novamente chamar o
 gbv_view, dessa vez o view mostra as coisas escritas no documento, o que
 é importante ressaltar é q não precisa de fato atualizar o documento, ape
 nas adicionar-lo novamente, pode ser até mesmo sem modificar nada do mesmo.
+
+
+Outro bug conhecido é o gbv_list
+
+O comando consegue ser executado independentemente da existencia ou não do
+arquivo que está sendo passado na linha de comando do terminal.
+Esse bug pode acabar causando uma confusão no usuário que pode tentar acessar
+a lista atrás de algo e apesar do arquivo não existir, a lista ser passada 
+do mesmo jeito.
+
+O gbv_order não está implementado
+
+Apesar de não ser obrigatorio, fiquei triste de não conseguir implementa-lo
+até tentei pensar em uma ideia inicial porém nada me venho a mente e acabei
+por focar nas demais funções e acabei sem tempo de implementar esta.
